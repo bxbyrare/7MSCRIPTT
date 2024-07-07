@@ -874,47 +874,63 @@ if settings.recenter then
         getgenv().crosshair_y["Line"]["From"] = Vector2.new((cam.ViewportSize.x / 2) - settings.x_offset, ((cam.ViewportSize.y / 2) - settings.y_offset) + settings.length)
     end)
 
-    local MiscTab = Window:CreateTab("(Farm)", rare) -- Title, Image
-    local Section = VisualTab:CreateSection("Farm")
-    local Button = Tab:CreateButton({
+    local MiscTab = Window:CreateTab("(☀️Farm)", rare) -- Title, Image
+    local Section = MiscTab:CreateSection("🔔Notificações")
+    local Button = MiscTab:CreateButton({})
         Name = "Notificações de dano",
         Callback = function()
-            local notifications = {}
-            local center = (workspace.CurrentCamera.ViewportSize / 2)
-            local function hitmarker_update()
-               for i = 1, #notifications do
-                   notifications[i].Position = Vector2.new(center.X,(center.Y + 150) + (i * 18))
-               end
-            end
-            local function hitmarker(Name, Distance, Damage, Duration)
-               task.spawn(function()
-                   local hitlog = Drawing.new('Text')
-                   hitlog.Size = 13
-                   hitlog.Font = 2
-                   hitlog.Text = "[ 🇧🇷 7M Script 🇧🇷 ] Hit: "..Name.." / Distancia: "..Distance.."s / Dano: "..math.floor(Damage).."Vida"
-                   hitlog.Visible = true
-                   hitlog.ZIndex = 3
-                   hitlog.Center = true
-                   hitlog.Color = Color3.fromRGB(255, 255, 255)
-                   hitlog.Outline = true
-                   table.insert(notifications, hitlog)
-                   hitmarker_update()
-                   wait(Duration)
-                   table.remove(notifications, table.find(notifications, hitlog))
-                   hitmarker_update()
-                   hitlog:Remove()
-               end)
-            end
-            
-            game:GetService("LogService").MessageOut:Connect(function(message)
-                local Name = message:match("->([%w_]+)");
-                local HealthBfr, HealthAfr = message:match("(%d+%.?%d*)->(%d+%.?%d*)hp");
-                local Dist = message:match("(%d+%.?%d*)s")
-                local Damage = tonumber(HealthBfr) - tonumber(HealthAfr)
-                if Name and HealthBfr and HealthAfr and Dist and Damage then
-                    hitmarker(Name, Dist, Damage, 4)
-                end
-            end)
-        end,
-     })
+local notifications = {}
+local center = (workspace.CurrentCamera.ViewportSize / 2)
+
+local function hitmarker_update()
+for i = 1, #notifications do
+notifications[i].Position = Vector2.new(center.X, (center.Y + 150) + (i * 18))
+end
+end
+
+local function hitmarker(Name, Distance, Damage, Duration)
+task.spawn(function()
+local hitlog = Drawing.new('Text')
+hitlog.Size = 13
+hitlog.Font = 2
+hitlog.Text = "[ 🇧🇷 7M Script 🇧🇷 ] Hit: "..Name.." / Distancia: "..Distance.."s / Dano: "..math.floor(Damage).."Vida"
+hitlog.Visible = true
+hitlog.ZIndex = 3
+hitlog.Center = true
+hitlog.Color = Color3.fromRGB(255, 255, 255)
+hitlog.Outline = true
+table.insert(notifications, hitlog)
+hitmarker_update()
+wait(Duration)
+table.remove(notifications, table.find(notifications, hitlog))
+hitmarker_update()
+hitlog:Remove()
+end)
+end
+
+local function isWithinDistance(player)
+local localPlayer = game.Players.LocalPlayer
+local localChar = localPlayer.Character
+local targetChar = player.Character
+if localChar and targetChar then
+local localPos = localChar:FindFirstChild("HumanoidRootPart").Position
+local targetPos = targetChar:FindFirstChild("HumanoidRootPart").Position
+local distance = (localPos - targetPos).magnitude
+return distance <= 500
+end
+return false
+end
+
+game:GetService("LogService").MessageOut:Connect(function(message)
+local Name = message:match("->([%w_]+)")
+local HealthBfr, HealthAfr = message:match("(%d+%.?%d*)->(%d+%.?%d*)hp")
+local Dist = message:match("(%d+%.?%d*)s")
+local Damage = tonumber(HealthBfr) - tonumber(HealthAfr)
+local player = game.Players:FindFirstChild(Name)
+
+if Name and HealthBfr and HealthAfr and Dist and Damage and player and isWithinDistance(player) then
+hitmarker(Name, Dist, Damage, 4)
+end
+end)
+end
 end
